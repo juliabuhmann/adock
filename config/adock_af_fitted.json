@@ -1,0 +1,64 @@
+{
+ "_comment": "ADock AF-receptor scoring variant v2_af_fitted (scoring-AF agent, 2026-10-26). Linear fitted function as config/adock_fitted.json, refit jointly on fit holo + fit_af AF cycle-0 decoys with gauss1 width 0.8 A (inter only). Regenerate: scripts/scoreaf_make_preset.sh. Selected on AF val_select halves (seeds 0-1); NOT better than v2_fitted on AF receptors there (see reports/scoring_af.md).",
+ "nonlinear": {
+  "base": "vina",
+  "buried_threshold": 177.0,
+  "buried_radius": 10.0,
+  "ion_rmin": 2.0,
+  "cutoff": 8.0,
+  "g1_off": 0.0,
+  "g1_w": 0.5,
+  "g2_off": 3.0,
+  "g2_w": 2.0,
+  "rep_off": 0.0,
+  "hyd_good": 0.5,
+  "hyd_bad": 1.5,
+  "hb_good": -0.7,
+  "hb_bad": 0.0,
+  "inter_prm": {
+   "g1_w": 0.8
+  }
+ },
+ "weights": {
+  "gauss1": -0.03782119081881681,
+  "gauss2": -0.004903272530385009,
+  "repulsion": 0.8176424389642435,
+  "hydrophobic": -0.03684766325813922,
+  "hbond": -0.5923749263273531,
+  "hyd_buried": -0.009405311093880184,
+  "hbond_buried": -0.025798999898708364,
+  "hbond_ligdonor": 0.05950791342276432,
+  "hbond_charged": -0.055840504957898864,
+  "metal_acceptor": -0.2846616705832579,
+  "ionic": 0.5270544467177405,
+  "polar_apolar": -0.01605532937238401,
+  "gauss1_buried": -0.00480785710476384,
+  "intra_gauss1": -0.026876362876692247,
+  "intra_gauss2": -0.004731609543928245,
+  "intra_repulsion": 0.7839312256606958,
+  "intra_hydrophobic": -0.024299824119803325,
+  "intra_hbond": -0.21872996921872428
+ },
+ "fit_report": {
+  "loss": 0.9808298278164906,
+  "setting": "sc1_capinf_g1w0.8_hbb0.0",
+  "data": "joint",
+  "groups": "base,strain,dir_hbond,desolv,metal,elec",
+  "tau": 1.0,
+  "alpha": 0.5,
+  "lam": 0.1,
+  "shuffle": false,
+  "n_poses": 116975,
+  "train_af": {
+   "n_groups": 835,
+   "n_with_native_docked": 258,
+   "rescore_top1_fit": 0.5232558139534884
+  },
+  "holdout_af": {
+   "n_groups": 97,
+   "n_with_native_docked": 41,
+   "rescore_top1_fit": 0.34146341463414637
+  }
+ },
+ "status": "first attempt; val-only evidence; see reports/scoring_af.md"
+}

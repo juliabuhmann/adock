@@ -1,0 +1,31 @@
+{
+ "fit_pool_reasons": {
+  "not_validated": 244971,
+  "covalent": 78179,
+  "test_overlap_plinder_cluster": 76733,
+  "chain_instance_gt1": 72509,
+  "released_after_fit_cutoff": 56742,
+  "test_overlap_uniprot": 53591,
+  "n_proper_ligands!=1": 29660,
+  "multi_residue_ligand": 29526,
+  "heavy_atoms_out_of_range": 11410,
+  "included_in_pool": 9097,
+  "test_overlap_pdb": 4917
+ },
+ "val_af_post2023_reasons": {
+  "test_overlap_seqid30": 4067,
+  "test_overlap_ligand_ccd": 3076,
+  "test_overlap_uniprot": 2599,
+  "no_afdb_model": 2403,
+  "test_overlap_pdb": 1001,
+  "covalent": 973,
+  "not_sampled": 590,
+  "multi_residue_ligand": 507,
+  "heavy_atoms_out_of_range": 474,
+  "chain_instance_gt1": 447,
+  "included": 134
+ },
+ "n_test_uniprot": 1200,
+ "n_test_clusters": 549,
+ "n_test_seqs": 3759
+}

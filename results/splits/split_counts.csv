@@ -1,0 +1,12 @@
+split,rows,included,pocket_monomer,pocket_homo,pocket_hetero,pocket_unknown,has_af,af_v4
+test_holo_pb2,308,308,246,48,14,0,290,191
+test_af_pb2,290,290,234,43,13,0,290,190
+test_holo_rnp,2579,2579,1791,708,78,2,643,545
+test_af_rnp,643,643,643,0,0,0,643,545
+test_af_rnp_post2023,223,223,223,0,0,0,223,179
+val_plinder,832,348,174,155,19,0,95,63
+fit,3000,3000,1686,736,578,0,895,591
+fit_af,1000,1000,998,0,2,0,1000,706
+val_astex,85,22,19,2,1,0,22,20
+val_dockgen,141,105,0,0,0,105,98,60
+val_af_post2023,134,134,134,0,0,0,134,71

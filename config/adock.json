@@ -1,0 +1,141 @@
+{
+ "_comment": "ADock engine v1 parameters. Scoring parameters are the published Vina / Vinardo values; search parameters are first guesses (not tuned).",
+ "_sources": {
+  "vina": "Trott & Olson, J Comput Chem 2010 (10.1002/jcc.21334); weights as in AutoDock Vina 1.2 source (src/lib/scoring_function.h, everything.h); num_tors_div effective weight 0.05846 = 0.1*(1.923+1)/5",
+  "vinardo": "Quiroga & Villarreal, PLoS ONE 2016 (10.1371/journal.pone.0155183); radii and weights as in AutoDock Vina 1.2 source",
+  "xs_types": "X-Score atom types as used by Vina 1.2 (src/lib/atom_constants.h xs_vdw_radii / xs_vinardo_vdw_radii; read from the Uni-Dock copy of the Vina 1.2 source). NB the Vinardo paper lists N 1.75, F 1.545, Cl 2.045, Br 2.165, I 2.36; we follow the Vina 1.2 implementation."
+ },
+ "xs_types": {
+  "_columns": ["radius_vina", "radius_vinardo", "hydrophobic", "donor", "acceptor"],
+  "C_H":   [1.9, 2.0,   1, 0, 0],
+  "C_P":   [1.9, 2.0,   0, 0, 0],
+  "N_P":   [1.8, 1.7,   0, 0, 0],
+  "N_D":   [1.8, 1.7,   0, 1, 0],
+  "N_A":   [1.8, 1.7,   0, 0, 1],
+  "N_DA":  [1.8, 1.7,   0, 1, 1],
+  "O_P":   [1.7, 1.6,   0, 0, 0],
+  "O_D":   [1.7, 1.6,   0, 1, 0],
+  "O_A":   [1.7, 1.6,   0, 0, 1],
+  "O_DA":  [1.7, 1.6,   0, 1, 1],
+  "S_P":   [2.0, 2.0,   0, 0, 0],
+  "P_P":   [2.1, 2.1,   0, 0, 0],
+  "F_H":   [1.5, 1.5,   1, 0, 0],
+  "Cl_H":  [1.8, 1.8,   1, 0, 0],
+  "Br_H":  [2.0, 2.0,   1, 0, 0],
+  "I_H":   [2.2, 2.2,   1, 0, 0],
+  "Si":    [2.2, 2.2,   0, 0, 0],
+  "Met_D": [1.2, 1.2,   0, 1, 0]
+ },
+ "metal_elements": ["Mg", "Mn", "Zn", "Ca", "Fe", "Cu", "Co", "Ni"],
+ "_metal_elements_note": "Vina maps Mg/Mn/Zn/Ca/Fe to Met_D; Cu/Co/Ni added here (assumption, not in Vina)",
+ "covalent_radii": {"H": 0.37, "C": 0.77, "N": 0.75, "O": 0.73, "P": 1.06, "S": 1.02, "F": 0.71, "Cl": 0.99, "Br": 1.14, "I": 1.33, "Si": 1.11, "Se": 1.16, "B": 0.82,
+                    "Mg": 1.30, "Mn": 1.39, "Zn": 1.20, "Ca": 1.74, "Fe": 1.25, "Cu": 1.32, "Co": 1.26, "Ni": 1.21, "Na": 1.54, "K": 1.96},
+ "bond_length_allowance": 1.1,
+ "_bond_note": "Vina assigns receptor bonds when r < 1.1 * (cov_i + cov_j) (model.cpp assign_bonds)",
+ "water_resnames": ["HOH", "WAT", "DOD", "H2O"],
+ "scoring": {
+  "vina": {
+   "radius_column": "radius_vina",
+   "cutoff": 8.0,
+   "gauss1":      {"offset": 0.0, "width": 0.5, "weight": -0.035579},
+   "gauss2":      {"offset": 3.0, "width": 2.0, "weight": -0.005156},
+   "repulsion":   {"offset": 0.0, "weight": 0.840245},
+   "hydrophobic": {"good": 0.5, "bad": 1.5, "weight": -0.035069},
+   "hbond":       {"good": -0.7, "bad": 0.0, "weight": -0.587439},
+   "rot_weight": 0.05846
+  },
+  "vinardo": {
+   "radius_column": "radius_vinardo",
+   "cutoff": 8.0,
+   "gauss1":      {"offset": 0.0, "width": 0.8, "weight": -0.045},
+   "gauss2":      {"offset": 3.0, "width": 2.0, "weight": 0.0},
+   "repulsion":   {"offset": 0.0, "weight": 0.8},
+   "hydrophobic": {"good": 0.0, "bad": 2.5, "weight": -0.035},
+   "hbond":       {"good": -0.6, "bad": 0.0, "weight": -0.6},
+   "rot_weight": 0.05846
+  }
+ },
+ "grid": {
+  "spacing": 0.375,
+  "_spacing_origin": "Vina default grid spacing",
+  "out_of_box_penalty": 10.0,
+  "ligand_types_only": true,
+  "_ligand_types_only_note": "v2: build grids only for the ligand's own XS types (+ C_H probe), as Vina does",
+  "_out_of_box_note": "quadratic penalty k*dist^2 (kcal/mol/A^2) per heavy atom outside the box; Vina uses a linear slope"
+ },
+ "search": {
+  "fast": {
+   "n_chains": 256, "stageA_conformers": 8, "stageA_conformer_trials": 64, "stageA_rotations": 384, "stageA_translation_step": 1.5, "stageA_atom_cap": 0.3,
+   "mc_rounds": 10, "opt_steps": 60, "final_opt_steps": 150,
+   "lr_trans": 0.25, "lr_rot": 0.25, "lr_tors": 0.25, "lr_final_frac": 0.05,
+   "mc_temperature": 1.2, "mc_lr_scale": 1.0, "mc_trans_sigma": 1.0, "mc_rot_sigma": 0.5,
+   "cluster_rmsd": 2.0, "n_out": 9,
+   "early_stop_k": 8, "early_stop_rounds": 2
+  },
+  "v2_fast": {
+   "engine": "kernel", "torch_fallback": "fast",
+   "n_chains": 64, "stageA_conformers": 8, "stageA_conformer_trials": 64, "stageA_rotations": 384, "stageA_translation_step": 1.5, "stageA_atom_cap": 0.3,
+   "mc_steps": 128, "mc_segment": 32, "mc_size_ref": 25, "bfgs_iters": 0, "final_bfgs_iters": 100, "polish_top": 16, "polish_iters": 60,
+   "mc_temperature": 1.2, "mc_amp_pos": 2.0, "mc_amp_rot": 2.0,
+   "early_stop_rounds": 0, "early_stop_tol": 0.01, "min_total_chains": 4096, "min_chain_steps": 32, "polish_nbr_margin": 2.0,
+   "cluster_rmsd": 2.0, "n_out": 9
+  },
+  "v2_default": {
+   "engine": "kernel", "torch_fallback": "fast",
+   "n_chains": 256, "stageA_conformers": 8, "stageA_conformer_trials": 64, "stageA_rotations": 384, "stageA_translation_step": 1.5, "stageA_atom_cap": 0.3,
+   "mc_steps": 128, "mc_segment": 32, "mc_size_ref": 25, "bfgs_iters": 0, "final_bfgs_iters": 100, "polish_top": 32, "polish_iters": 100,
+   "mc_temperature": 1.2, "mc_amp_pos": 2.0, "mc_amp_rot": 2.0,
+   "early_stop_rounds": 0, "early_stop_tol": 0.01, "min_total_chains": 4096, "min_chain_steps": 32, "polish_nbr_margin": 2.0,
+   "cluster_rmsd": 2.0, "n_out": 9
+  },
+  "v2_fitted": {"base_preset": "v2_default", "fitted_sf": "config/adock_fitted.json",
+   "_note": "scoring-fit agent: fitted scoring function (config/adock_fitted.json, src/adock/fit) on the v2_default search; exact-Vina polish disabled, final ranking by exact fitted energy (adock.fit.fdock.kernel_cfg); see reports/scoring_fit.md"},
+  "v2_consensus": {"base_preset": "v2_default", "n_out": 9,
+   "consensus": {"runs": [["config/adock_fitted.json", 0, null]], "panel": ["config/adock_fitted.json"],
+                 "rule": {"key": "sf", "sfs": ["config/adock_fitted.json"], "cluster": "funnel", "alpha": 0.5, "cut": 2.0},
+                 "report_sf": "config/adock_fitted.json", "n_keep": 4096},
+   "_note": "consensus agent (src/adock/consensus, reports/consensus.md): v2_fitted search, all chain end states kept, clustered at 2 A sym-RMSD, clusters ranked by fitted E_min - alpha*ln(n_chains) (funnel width); alpha chosen on val_plinder val_select holo from {0.25, 0.5, RT, 1.0}. val_confirm (run once): NOT better than v2_fitted (holo -2.4/-1.8 points seeds 0/1, AF +0.7/0.0) -> negative result, v2_fitted remains the recommended preset."},
+  "v2_consensus2": {"base_preset": "v2_default", "n_out": 9,
+   "consensus": {"runs": [["config/adock_fitted.json", 0, null], ["config/adock_fitted.json", 1000, null]], "panel": ["config/adock_fitted.json"],
+                 "rule": {"key": "sf", "sfs": ["config/adock_fitted.json"], "cluster": "funnel", "alpha": 0.5, "cut": 2.0},
+                 "report_sf": "config/adock_fitted.json", "n_keep": 4096},
+   "_note": "as v2_consensus but pooling two fitted runs (seed, seed+1000): about 2x the v2_fitted cost; val_select holo seeds 0/1: 77/67 vs v2_fitted 66/63; not run on val_confirm"},
+  "v2_af_fitted": {"base_preset": "v2_default", "fitted_sf": "config/adock_af_fitted.json",
+   "_note": "scoring-AF agent: joint holo+AF refit with gauss1 width 0.8 (config/adock_af_fitted.json) on the v2_default search; see reports/scoring_af.md"},
+  "v2_rerank": {"base_preset": "v2_default", "fitted_sf": "config/adock_fitted.json", "rerank": "config/adock_rerank.json",
+   "n_out": 9, "rerank_workers": 4,
+   "_note": "rerank agent: v2_fitted search, then a conditional-logit re-ranker (<= 15 interpretable features, L2) over the top-K fitted cluster representatives (src/adock/rerank; model config/adock_rerank.json trained on fit pools only by scripts/rerank_train.py); NOT recommended: its val gain comes from the distance-to-box-centre feature (box built around the crystal ligand) and reverses (-5 points) with a 3 A box-centre offset; see reports/rerank.md"},
+  "v2_accurate": {
+   "engine": "kernel", "torch_fallback": "accurate",
+   "n_chains": 512, "stageA_conformers": 16, "stageA_conformer_trials": 128, "stageA_rotations": 768, "stageA_translation_step": 1.0, "stageA_atom_cap": 0.3,
+   "mc_steps": 256, "mc_segment": 64, "mc_size_ref": 25, "bfgs_iters": 0, "final_bfgs_iters": 150, "polish_top": 64, "polish_iters": 150,
+   "mc_temperature": 1.2, "mc_amp_pos": 2.0, "mc_amp_rot": 2.0,
+   "early_stop_rounds": 0, "early_stop_tol": 0.01, "min_total_chains": 4096, "min_chain_steps": 32, "polish_nbr_margin": 2.0,
+   "cluster_rmsd": 2.0, "n_out": 9
+  },
+  "kdev": {
+   "engine": "kernel",
+   "n_chains": 128, "stageA_conformers": 8, "stageA_conformer_trials": 64, "stageA_rotations": 384, "stageA_translation_step": 1.5, "stageA_atom_cap": 0.3,
+   "mc_steps": 64, "mc_segment": 16, "mc_size_ref": 0, "bfgs_iters": 0, "final_bfgs_iters": 100, "polish_top": 32, "polish_iters": 100,
+   "mc_temperature": 1.2, "mc_amp_pos": 2.0, "mc_amp_rot": 2.0,
+   "early_stop_rounds": 0, "early_stop_tol": 0.01,
+   "cluster_rmsd": 2.0, "n_out": 9
+  },
+  "accurate": {
+   "n_chains": 256, "stageA_conformers": 16, "stageA_conformer_trials": 128, "stageA_rotations": 768, "stageA_translation_step": 1.0, "stageA_atom_cap": 0.3,
+   "mc_rounds": 12, "opt_steps": 80, "final_opt_steps": 200,
+   "lr_trans": 0.25, "lr_rot": 0.25, "lr_tors": 0.25, "lr_final_frac": 0.05,
+   "mc_temperature": 1.2, "mc_lr_scale": 1.0, "mc_trans_sigma": 1.0, "mc_rot_sigma": 0.5,
+   "cluster_rmsd": 2.0, "n_out": 9,
+   "early_stop_k": 16, "early_stop_rounds": 3
+  }
+ },
+ "mode_aliases": {"default": "v2_default"},
+ "_v2_note": "v2_* modes use the fused CUDA engine (src/adock/mckernel.py); first attempt at budgets, see reports/engine_v2.md. On CPU, or with a non-stock potential, dock_batch falls back to the v1 torch preset named in torch_fallback. 'fast'/'accurate' are the unchanged v1 torch presets (used by the scoring-fit scripts and CPU mode).",
+ "_search_note": "fast = config A of the 2026-10-26 val sweeps (results/adock/val_*_A*.csv); stageA_atom_cap 0.3 chosen on val_astex (0.1: similar, 1.0: much worse); mc_temperature 1.2 = Vina's Metropolis temperature; cluster_rmsd 2.0 A as in task spec; everything else is a first guess",
+ "prep_workers": 8,
+ "_prep_workers_note": "process pool size for receptor/ligand preparation in dock_batch (AGENTS_BRIEF: <= 8 cores); 0 = serial",
+ "box_key": "primary",
+ "_box_key_note": "records from scripts/prepare_records.py: primary = pocket cube (>=24 A), secondary = ligand autobox; dev records use pocket/autobox",
+ "compile": true
+}

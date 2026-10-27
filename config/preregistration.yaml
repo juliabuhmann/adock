@@ -1,0 +1,129 @@
+# Pre-registration of confirmatory analyses (DESIGN.md v2). Written 2026-10-26 16:55 CET, before any
+# modelling or test-set access. Changes after this point must be logged in DESIGN.md §11 with a reason
+# and must never be made after viewing test results.
+alpha: 0.05
+multiplicity: holm            # across C1, C2, C3
+seeds: [0, 1, 2]              # every stochastic method incl. baselines; confirmatory tests use seed 0
+time_limit_s_per_complex: 300 # wall time, all methods; timeout = failure
+success_rmsd_A: 2.0           # symmetry-corrected heavy-atom RMSD, holo frame, top-1 pose
+secondary_metrics: [pb_valid_and_rmsd_le_2, top5_success, median_rmsd]  # descriptive only, not tested
+
+ligand_filter:                # fit/val/test inclusion (recorded exclusions, never silent)
+  heavy_atoms_min: 10
+  heavy_atoms_max: 60
+  exclude_covalent: true
+  protonation: {tool: "pinned in envs/dock.yml", pH: 7.4}
+
+box:
+  primary: {type: pocket_cube, pocket_residue_cutoff_A: 6.0, center: pocket_residue_heavy_atom_centroid,
+            edge_A: 24.0, enlarge_rule: "edge = max(24, pocket-residue heavy-atom extent per axis + 4)"}
+  secondary: {type: ligand_autobox, padding_A: 8.0}
+  sensitivity: {center_offset_A: 3.0}
+af_superposition: {atoms: CA, residue_cutoff_A: 10.0, outlier_rejection: false}
+
+baseline_settings:
+  gnina_default: "gnina 1.3.3, --exhaustiveness 8 --num_modes 9 --seed <s>, CNN rescoring default; top-1 = first output pose"
+  gnina_nocnn: "same, --cnn_scoring none"
+  vina: "vina 1.2.7 --exhaustiveness 8 --seed <s> (scoring vina and vinardo)"
+  smina: "smina --exhaustiveness 8 --seed <s>"
+  unidock: "Uni-Dock 1.2 --search_mode balance (fast/detail for Pareto curve) --seed <s>"
+  flexible_sidechain: "gnina --cnn_scoring none --flexdist_ligand ligand_input.sdf --flexdist 3.5 (AF receptors)"
+
+claims:
+  C1:
+    hypothesis: "ADock AF-fast top-1 success > GNINA default on the same unmodified AF receptor"
+    test_set: test_af_rnp_post2023   # RnP ∩ PLINDER pred, released > 2023-06-01, AFDB v4 receptors
+    test: exact_mcnemar_one_sided_seed0
+    robustness: [uniprot_clustered_paired_bootstrap, seed_permutation, rnp_low_similarity_bin]
+    secondary_sets: [test_af_pb2_esmfold, test_af_pb2_afdb]   # reported separately, never pooled across receptor types
+    af_fast_definition: "receptor preparation independent of the query ligand (once per pocket); ligand-aware side-chain moves during docking are allowed and counted in docking time"
+    gap_closed: "bootstrap CI only, reported only if baseline holo-AF gap >= 10 points"
+  C2:
+    hypothesis: "ADock (mode=default) median warm wall time per complex < Uni-Dock balance and < GNINA default, AND accuracy non-inferior"
+    test_set: test_holo_pb2
+    test: "two-part: (a) paired Wilcoxon on per-complex wall time vs each comparator, (b) one-sided 95% CI of paired success difference > -3 points vs each"
+    reported_extra: [pareto_curve, latency_single_complex, throughput_whole_set, cpu_only_16_threads, many_ligands_per_pocket]
+  C3:
+    hypothesis: "ADock holo success non-inferior (margin -5 points) to best physics baseline"
+    test_set: test_holo_pb2
+    comparator_rule: "highest val-select success among vina, vinardo, smina, gnina_nocnn (fixed before test)"
+    test: "one-sided 95% CI (paired bootstrap) of success difference > -5 points"
+  C4:
+    status: exploratory
+    analysis: "logistic regression success ~ method * pocket_type (monomer/homo/hetero), ADock vs GNINA default, RnP holo; non-inferiority margin -10 points per stratum, descriptive"
+
+final_pass:
+  baseline_runs_on_test_allowed_early: "yes, outputs sealed (not scored, not inspected) until ADOCK_FINAL_EVAL=1"
+
+# --- Amendment A1 (2026-10-26, before any modelling/test access; reason: AFDB v4 single-file downloads
+# return 404, v4 obtained from SwissProt tarball covers 179/223 of the primary set; v6 models (built 2025)
+# may have used the test holo structures as templates):
+amendment_A1:
+  C1_primary_test_set: "test_af_rnp_post2023 restricted to af_version == v4 (n=179); all 223 (v4+v6) reported as secondary"
+  astex_excluded_63: "kept out entirely (share UniProt with test sets), not used even for debugging"
+  baseline_seeds: "GNINA default and Uni-Dock: seeds {0,1,2}; vina/vinardo/smina/gnina_nocnn/flexible: seed 0 only (compute budget); ADock: {0,1,2}"
+
+# --- Amendment A2 (2026-10-26 ~21:35, before any test scoring; from independent verification reports/verification_1.md):
+amendment_A2:
+  organometallic_ligands: "excluded (RDKit/meeko cannot type them; recorded per record as prep failure) — deviation from the original ligand filter, applied identically to all sets"
+  gnina_flex_flexible_residues: "flexible residues = record's pocket residues (heavy atom within 6 A of reference ligand, i.e. the same emulated pocket-finder output that defines the box), capped at the 10 residues whose side-chain centroid is nearest the pocket centroid, passed via --flexres. Replaces --flexdist_ligand, which would need the crystal ligand pose (oracle) because the input ligand is not placed in the pocket."
+  test_guard: "every docking/eval script must refuse test_* record dirs unless ADOCK_FINAL_EVAL=1"
+
+# --- Amendment A3 (2026-10-27 01:15, before any test scoring; from reports/template_seeded.md, val only):
+# The template-first rule was found post hoc on val_af_post2023 (theta chosen on val_select, confirmed on
+# val_confirm: +26/+19/+8 points at T1/T2/T3). It is added as a SEPARATE exploratory claim; C1-C4 unchanged.
+amendment_A3:
+  C5:
+    status: exploratory (secondary; not part of the Holm family C1-C3)
+    method: "AF-hybrid: per complex, take the best date-safe template-transferred pose (src/adock/template, config/template.json) when the tier's best MCS covers >= theta of query heavy atoms, else the frozen AF-fast ADock pose"
+    theta: {T1: 0.5, T2: 0.5, T3: 0.9}
+    tiers: "T1 = templates released strictly before the query (never the query entry); T2 = T1 minus same UniProt; T3 = T2 minus >= 30% sequence identity"
+    test_set: "test_af_rnp_post2023 v4 (n=179) primary for C5; all 223 secondary"
+    comparators: "GNINA default on the same AF receptor (as C1) and ADock AF-fast alone"
+    test: "exact McNemar seed 0 per tier, reported with all three tiers; T3 is the leakage-robust headline"
+    disclosure: "not physics; depends on template availability; theta selected after seeing val results"
+
+# --- Amendment A4 (2026-10-27 02:45, before any test scoring; resolves ambiguities found while building the final-eval harness, reports/final_eval_plan.md):
+amendment_A4:
+  C2_preset: "literal reading of 'mode=default': primary = preset v2_default (the default at preregistration time); the frozen product preset v2_fitted is reported as secondary for C2"
+  C2_timing_primary: "ADock single-complex warm wall time (one process, model/kernels loaded, one complex at a time, includes ligand prep + grids + search) vs per-complex wall time of comparators, measured in one dedicated timing pass on a fixed seeded subset of 50 test_holo_pb2 complexes, tools run sequentially on the same node with the same CPU allotment (6 cores) and GPU; batch-amortised throughput reported as secondary"
+  C1_C3_C5_preset: "v2_fitted (frozen holo/AF-fast preset, config/final_frozen.yaml)"
+  rnp_low_similarity_bin: "lowest RnP similarity bin (similarity < 20), as provided with the RnP benchmark annotations"
+  missing_records: "records failing prep for reasons other than the pre-registered ligand filters (heavy-atom range, covalent, organometallic) count as failures for every method"
+  known_nondeterminism: "ADock top-1 can depend on batch composition; final eval uses the scripted batch order; disclosed in REPORT"
+
+# --- Amendment A5 (2026-10-27 04:00, before any test scoring; from reports/afhybrid.md "Holo" section, val only):
+amendment_A5:
+  C6:
+    status: exploratory (secondary; not in the Holm family)
+    method: "same template-first hybrid as C5 (theta frozen per A3, chosen on AF val only), applied to holo receptors; fallback v2_fitted"
+    test_sets: "test_holo_pb2 (PoseBusters V2) and test_af_rnp_post2023 holo receptors"
+    comparators: "GNINA default (CNN) on the same holo receptor; ADock v2_fitted alone"
+    test: "exact McNemar seed 0 per tier T1/T2/T3, all three reported; T3 is the leakage-robust headline"
+    disclosure: "PoseBusters V2 is pre-2023 with many earlier same-protein entries, so T1/T2 are expected to be optimistic for deployment on novel proteins"
+
+# --- Amendment A6 (2026-10-27T08:14:34+01:00, POST-FREEZE, before any test statistic was computed or viewed; from reports/v3_explore.md, val only):
+# Two v3 changes held up on val_confirm. They do not replace the frozen methods or C1-C6; reported separately as post-freeze exploratory.
+amendment_A6:
+  C7:
+    status: "exploratory, post-freeze (code commit 146187f)"
+    method: "v3_holo = v2_fitted scoring + v2_accurate search + repulsion capped at 1 A^2 (as in reports/v3_explore.md, no further tuning)"
+    test_sets: "test_holo_pb2; test_af_rnp_post2023 holo; test_holo_rnp_dimer"
+    comparators: "frozen v2_fitted (same seeds) and GNINA default"
+    test: "paired difference seed 0 with bootstrap CI and exact McNemar; seeds 0-2 reported"
+  C8:
+    status: "exploratory, post-freeze"
+    method: "tethered refinement (2 A flat-bottom, fitted score) of every template-sourced hybrid pose, as in reports/v3_explore.md"
+    test_sets: "all C5/C6 hybrid sets"
+    metrics: "top-1 success, clash rate, PoseBusters-valid rate, vs the frozen hybrid poses, per tier"
+
+# --- Amendment A7 (2026-10-27T11:41:20+01:00, POST-TEST exploratory; registered before running anything below on test).
+# Other methods' test results are known; this arm was developed on val only (reports/cofold_msa.md, reports/cofold_pose.md).
+amendment_A7:
+  C9:
+    status: "exploratory, post-test; not part of any confirmatory family"
+    method: "AF-cofold mode: Boltz-2 (MSA from ColabFold server, query ligand, pocket constraint = record pocket residues, 1 sample, seed 0) exactly as in scripts/cofold_msa_*; primary pose = Boltz pose + tethered refinement (2 A flat-bottom, v2_fitted score) as in scripts/cofoldpose_*; also report raw Boltz pose and ADock v2_fitted docking (seeds 0-1) in the co-folded receptor"
+    test_set: "test_af_rnp_post2023 (released after the Boltz-2 training cutoff 2023-06-01); v4 subset (n=178) primary for comparability with C1, all 222 secondary"
+    comparators: "GNINA default on the AFDB receptor (C1 comparator), ADock v2_fitted on AFDB, C5 hybrid T1/T3"
+    metrics: "top-1 success, exact McNemar seed 0, PoseBusters-valid, clash rate, wall time per complex (MSA + co-fold + refine)"
+    disclosure: "co-folding is a deep-learning structure model (used, not trained); release-date safety does not exclude older homologs in its training data; missing outputs count as failures"

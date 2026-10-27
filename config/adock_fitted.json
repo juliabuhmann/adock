@@ -1,0 +1,73 @@
+{
+ "_comment": "ADock fitted scoring function (linear in weights over per-term features; see src/adock/fit/terms.py). Energy units: Vina-like kcal/mol per unit feature; no 1/(1+w*Nrot) factor in ranking.",
+ "nonlinear": {
+  "base": "vina",
+  "buried_threshold": 177.0,
+  "buried_radius": 10.0,
+  "ion_rmin": 2.0,
+  "cutoff": 8.0,
+  "g1_off": 0.0,
+  "g1_w": 0.5,
+  "g2_off": 3.0,
+  "g2_w": 2.0,
+  "rep_off": 0.0,
+  "hyd_good": 0.5,
+  "hyd_bad": 1.5,
+  "hb_good": -0.7,
+  "hb_bad": 0.0
+ },
+ "weights": {
+  "gauss1": -0.04205807783159489,
+  "gauss2": -0.004991743991543715,
+  "repulsion": 0.8156755426614062,
+  "hydrophobic": -0.037384251945279,
+  "hbond": -0.5992849056216177,
+  "hyd_buried": -0.010445834116223103,
+  "hbond_buried": -0.033401801182270895,
+  "hbond_ligdonor": 0.04364980965614507,
+  "hbond_charged": -0.05896339457313388,
+  "metal_acceptor": -0.2891157216623504,
+  "ionic": 0.5160035204995856,
+  "polar_apolar": -0.019994960794392377,
+  "gauss1_buried": -0.009641505343954668,
+  "intra_gauss1": -0.025311347297737166,
+  "intra_gauss2": -0.004635982193796613,
+  "intra_repulsion": 0.7775323047062759,
+  "intra_hydrophobic": -0.023113067408981426,
+  "intra_hbond": -0.2059719834408973
+ },
+ "fit_report": {
+  "train": {
+   "n_groups": 3057,
+   "n_with_native_docked": 1416,
+   "rescore_top1_w0": 0.597457627118644,
+   "rescore_top1_fit": 0.6546610169491526
+  },
+  "holdout": {
+   "n_groups": 322,
+   "n_with_native_docked": 166,
+   "rescore_top1_w0": 0.536144578313253,
+   "rescore_top1_fit": 0.5903614457831325
+  },
+  "loss": 1.0032559383643143,
+  "n_poses": 116975,
+  "setting": "vina_bur177",
+  "groups": "base,strain,dir_hbond,desolv,metal,elec",
+  "tau": 1.0,
+  "alpha": 0.5,
+  "lam": 0.1,
+  "shuffle": false,
+  "feats": [
+   "/tmp/adock/fit/feat/c0_holo__vina_bur177.npz",
+   "/tmp/adock/fit/feat/c0_af__vina_bur177.npz"
+  ]
+ },
+ "status": "Selected 2026-10-26 by val-select docking (engine v2_default, seeds 0,1; pooled val_plinder val_select holo+AF and val_af_post2023 AF). Cycle-0 fit (Vina+Vinardo decoys, fit+fit_af). Val-confirm (once, seed 0): not significantly better than stock Vina on v2_default (+2.8 pts, 95% CI -1.9..+7.4). See reports/scoring_fit.md.",
+ "units": {
+  "energy": "Vina-like kcal/mol per unit feature (ranking only; no 1/(1+w*Nrot) factor)",
+  "ionic": "positive weight = attraction between opposite formal charges; feature q_l*q_a*(1/r^2-1/rc^2), r clamped at ion_rmin (A)",
+  "buried_threshold": "receptor heavy atoms within buried_radius (A) of the receptor atom",
+  "others": "Vina basis functions of the surface distance d=r-R_l-R_a (A); *_buried/hbond_*/metal_acceptor/polar_apolar/gauss1_buried are additive extras on subsets of pairs (src/adock/fit/terms.py INTER_TERMS)"
+ },
+ "run": "python -m adock.fit.fdock --receptor R.pdb --ligand L.sdf --box box.json --out poses.sdf  (or adock.dock mode 'v2_fitted')"
+}

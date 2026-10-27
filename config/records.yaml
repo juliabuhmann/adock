@@ -1,0 +1,16 @@
+# Record-preparation constants for scripts/prepare_records.py (data agent, 2026-10-26).
+# Box values are taken from config/preregistration.yaml (box:, af_superposition:) at run time; the
+# constants below are preparation choices that are not part of the pre-registration.
+seed: 0                          # ETKDG embedding + random rigid placement of ligand_input
+pocket_chain_contact_A: 4.0      # chain counts as a pocket chain (pocket_type) if >=1 heavy atom within this of the ligand (reports/data_scouting.md)
+cofactor_contact_A: 4.0          # metals / cofactors kept in receptor_holo only if a heavy atom is within this of the ligand
+receptor_box_margin_A: 4.0       # whole polymer chains kept if any heavy atom lies inside the primary box grown by this margin
+autobox_min_edge_A: 20.0         # task spec: secondary autobox edge minimum
+min_receptor_ligand_dist_A: 1.0  # holo record fails if any receptor heavy atom is closer than this to the reference ligand
+ligand_input_min_centroid_shift_A: 2.0  # assertion: ligand_input centroid must be at least this far from the crystal centroid
+ligand_input_min_inplace_rmsd_A: 1.0    # assertion: in-place (no alignment) heavy-atom RMSD to ligand_ref must exceed this
+ligand_input_offset_A: 10.0      # if the crystal centroid is within the shift limit of the origin, ligand_input is moved by this along x
+protonation: {tool: dimorphite-dl, version: "2.1.0", pH: 7.4, precision: 1.0, max_variants: 1}  # pip-pinned in scripts/install_env_dock_dataextras.sh; openbabel -p 7.4 rejected (invalid [O-] on ethers)
+af_min_identity: 0.9             # predicted chain is placed on a holo chain only if aligned sequence identity >= this
+af_min_pocket_pairs: 3           # fewer pocket CA pairs than this -> superpose on all aligned CA of the chain (flagged)
+metal_elements: [Li, Na, K, Rb, Cs, Be, Mg, Ca, Sr, Ba, Mn, Fe, Co, Ni, Cu, Zn, Cd, Hg, Mo, W, V, Cr, Pt, Pd, Ag, Au, Al, Ga, In, Tl, Pb, Sn, Sb, Bi, La, Ce, Sm, Eu, Gd, Tb, Yb, Lu, Ir, Os, Ru, Rh, Re]

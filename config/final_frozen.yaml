@@ -1,0 +1,52 @@
+_comment: Written by scripts/make_final_frozen.py (val data only). Read by scripts/final_eval.sh and scripts/final_stats.py.
+written: '2026-10-27T03:44:38+01:00'
+C3_comparator: gnina_nocnn
+C3_selection:
+  rule: highest val-select success among vina, vinardo, smina, gnina_nocnn (fixed before test)
+  tie_break: first in vina,vinardo,smina,gnina_nocnn
+  val_select_success:
+    vina: 86/224
+    vinardo: 55/224
+    smina: 80/224
+    gnina_nocnn: 90/224
+  sensitivity_records_without_any_timeout:
+    vina: 84/212
+    vinardo: 55/212
+    smina: 76/212
+    gnina_nocnn: 87/212
+presets:
+  holo:
+    adock_mode: v2_fitted
+    receptor: receptor_holo.pdb
+  af_fast:
+    adock_mode: v2_fitted
+    receptor: receptor_af.pdb (plain AF receptor; no soft/repack/ensemble/consensus/rerank/induced-fit)
+  secondary:
+    adock_mode: v2_default
+  C2:
+    adock_mode: v2_default
+    secondary_modes:
+    - v2_fitted
+    definition: preregistration amendment_A4.C2_preset; timing = scripts/final_timing.py (A4.C2_timing_primary)
+  C5_hybrid:
+    script: scripts/run_afhybrid.py
+    fallback_mode: v2_fitted
+    theta:
+      T1: 0.5
+      T2: 0.5
+      T3: 0.9
+    tiers:
+    - T1
+    - T2
+    - T3
+    definition: preregistration amendment_A3.C5
+seeds:
+- 0
+- 1
+- 2
+code_commit: e3d201b3710391f141159194f60075318a9b46f8
+code_dirty_files: []
+sha256:
+  config/adock.json: 5fec50f57aaf4694c36f9958c9aaf751358ebf22a82c42aea06a86c38ce78aaa
+  config/adock_fitted.json: c32f6cd3a9293a7bcd73654e4d2f49746247dac09fd2556ffbff77477d071521
+  config/template.json: 7904fdcf37ea4f127d0524017c711af99e9f278220c01e4fbe550c399c017fb9
