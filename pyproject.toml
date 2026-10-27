@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adock"
+version = "0.1.0"
+description = "GPU/CPU protein-ligand docking engine with Vina-family and fitted scoring, and a template-first AlphaFold hybrid (research code)"
+readme = "README.md"
+requires-python = ">=3.11"
+# Runtime dependencies (torch with CUDA, cupy, rdkit, gemmi, openmm, ...) come from the conda env in envs/dock.yml
+# (scripts/install_env_dock.sh); they are not pinned here so that `pip install -e .` does not replace the CUDA builds.
+dependencies = []
+
+[project.scripts]
+adock-dock = "adock.dock:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

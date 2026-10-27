@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Environments (rebuilt by scripts/install_env_*.sh; envs/*.yml stay tracked)
+conda_envs/
+.venv/
+venv/
+.env
+.env.*
+
+# Downloaded / derived data, external binaries, scratch (rebuilt by scripts; see DATA.md)
+/data/
+/external/
+/logs/
+/scratch/
+*.log
+
+# Run outputs written by scripts into the repo (the published results live in predictions/ and results/splits/)
+/results/*
+!/results/splits/
+/results/test_access_log.tsv
+/results/val_runs.tsv
+
+# Large structure caches and model weights (never committed; licences differ)
+*.cif.gz
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.bin.zst
+*.npz
+
+# Compiled kernels / caches
+*.so
+*.o
+cupy_cache/
+jit_cache/
+
+# Secrets
+*.pem
+*.key
+secrets*
+.netrc
+
+# OS / editors
+.DS_Store
+*.swp
+.idea/
+.vscode/
