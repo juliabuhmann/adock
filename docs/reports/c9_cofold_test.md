@@ -1,0 +1,24 @@
+# C9 AF-cofold mode on test_af_rnp_post2023 (amendment A7, POST-TEST exploratory; run 2026-10-27 11:43–12:33 CET by `date`)
+**Status.** First run, not independently re-computed. Not part of any confirmatory family. Other methods' test results were known before this run. Access was logged by adock.guard (results/test_access_log.tsv).
+**Run.** Pipeline = scripts/cofold_msa_{setup,fetch,boltz,dock}, scripts/cofoldpose_{run,pb}. Method parameters were copied unchanged from config/cofold_msa.json into config/c9_test.json (scripts/c9_make_config.py asserts this). Settings: ColabFold unpaired MSA (3 in parallel), Boltz-2 `fast` with query ligand and box-residue pocket constraint, 1 sample, seed 0. Refinement: 2 Å flat-bottom tether, v2_fitted score. ADock: v2_fitted, seeds 0–1. The v4 subset ran first. Driver: scripts/c9_run.sh. Summary: scripts/c9_summarize.py.
+**Completeness.** 217/222 complexes completed (v4: 177/178). The 5 missing records have no AFDB receptor (8plp, 8plw, 8plx, 8ttz, 8ujy; v4: 1). They count as failures. Boltz produced output for 217/217, and the pose mapping had 0 errors.
+**Top-1 success, seed 0** (%; comparators from results/final/raw as in final_stats.py; exact one-sided McNemar for C9 > comparator; UniProt-cluster 95 % CI of Δ):
+| C9 arm | v4 n=178 | all n=222 | vs GNINA AF (18.0 / 16.7) | vs ADock v2_fitted AF (11.2 / 10.8) | vs hybrid T1 (23.6 / 28.4) | vs hybrid T3 (11.8 / 14.9) |
+|---|---|---|---|---|---|---|
+| **refined Boltz pose (primary)** | **66.9** | 63.5 | +48.9 [40.1, 56.9], p=1e-23 | +55.6, p=5e-27 | +43.3 [33.3, 52.0], p=1e-20 | +55.1, p=9e-27 |
+| raw Boltz pose | 69.1 | 65.3 | +51.1, p=1e-24 | +57.9, p=3e-28 | +45.5, p=7e-22 | +57.3, p=6e-28 |
+| ADock v2_fitted in co-folded receptor, s0 (s1; mean) | 42.1 (39.3; 40.7) | 39.6 (38.7; 39.2) | +24.2 [15.6, 31.6], p=8e-8 | +30.9, p=3e-11 | +18.5 [9.0, 26.1], p=1e-5 | +30.3, p=9e-11 |
+p-values and CIs in the table are for v4. All-222 values are in results/final/c9/mcnemar.csv. They are all ≤ 0.003; ADock-in-cofold vs T1 on all 222 is +11.3 [2.0, 19.4] (cluster CI), p = 0.0026. Discordant pairs (refined vs GNINA, v4): 90 vs 3.
+**Pose quality** (v4; all 222 in quality.csv). PoseBusters 'dock' PB-valid among posed complexes: raw 82.5 %, refined 97.2 %, ADock-in-cofold 95.5 %. Clash proxy (< 0.75 ΣvdW): raw 15.8 %, refined 1.7 %. Refinement cost success: −2.2 points on v4 (4 lost, 0 gained). Val showed the same pattern (−1.6).
+**Time per complex** (median / mean, s; shared node, so upper bounds). MSA 3.5 / 32.2 (serial per-complex sum of ColabFold walls; 90th pct 73 s, max 327 s). Co-fold 3.5 (v4) / 7.0 (rest), from batched Boltz wall / n. Refine 0.17. Total median 10 s, mean 37 s. ColabFold dominates and varies with the public server. Many sequences returned in about 3 s, possibly from a server-side cache (not verified).
+**Interpretation.**
+1. On this post-2023 test set, Boltz-2 co-folding with the pocket constraint is about 3.7× GNINA-on-AFDB and 2.8× the C5 T1 hybrid.
+2. Most of the gain comes from the co-folded pose itself; physics refinement only fixes validity. ADock in the co-folded receptor also gains a lot over ADock on AFDB (+31 points). This is far more than on val (+8.3).
+3. Test success exceeds val (Boltz pose 69 vs 51 % on val). The reason is unknown.
+**Caveats.**
+- Post-test, not pre-specified before seeing test results, so it is not confirmatory.
+- Boltz-2 is a DL model with a training cutoff of 2023-06-01. Release dates do not exclude older homologs or chemotypes from its training data. A similarity-binned analysis was added afterwards by the PI (scripts/c9_similarity_strata.py → results/final/c9/similarity_strata.csv; REPORT §6.6): success rises from 22.7 % (sim < 20, n=22) to ~90 % (sim ≥ 90), so much of C9's gain likely reflects training-set similarity.
+- The pocket constraint uses box residues derived from the reference ligand. All comparators use the same box, but GNINA and ADock see only a box, not a residue-level constraint.
+- 1 Boltz sample. Bootstrap/McNemar use seed 0. ADock-in-cofold has about ±4 points of batch noise (cofold_pose.md).
+**Plumbing (no method change).** Commit ae58331 adds config-path, result-dir and test-universe selection: halves = AFDB v4 / rest from final_stats.universe. Test is allowed only via a config carrying `final_eval_amendment`, and the guard still runs. The PB script gained a guard call. One ColabFold fetch (8swe, transient proxy/DNS error) was retried once (ok, 12:12:39), about 15 s after the Boltz v4 batch started; a Boltz output exists, but whether Boltz used that MSA is not verified. The summarize script first used the wrong dock variant name (`ligpc` instead of `boltz_ligpc`); this was fixed before the numbers above.
+**Files.** results/final/c9/{outcomes,mcnemar,quality,timing}.csv; results/final/c9/{cofold,pose}/ (per-half rows, PB, MSA/Boltz timings). Structures are node-local in /tmp/adock/c9; rerun with scripts/c9_run.sh.
