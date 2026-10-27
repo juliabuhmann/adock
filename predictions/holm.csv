@@ -1,0 +1,4 @@
+claim,p_raw,p_holm,reject_H0,complete_family
+C1,0.9937295243144035,1.0,False,True
+C2,0.9999000099990001,1.0,False,True
+C3,0.0423957604239576,0.12718728127187282,False,True

@@ -1,0 +1,10 @@
+set,receptor,arm,seed,n,success_top1,success_top5,failures,wall_median_s
+test_af_rnp_post2023,holo,v3_holo,s0,217,55.8,79.7,0,0.164
+test_af_rnp_post2023,holo,v3_holo,s1,217,54.8,80.2,0,0.172
+test_af_rnp_post2023,holo,v3_holo,s2,217,54.4,80.6,0,0.159
+test_holo_pb2,holo,v3_holo,s0,276,65.6,86.2,0,0.222
+test_holo_pb2,holo,v3_holo,s1,276,65.6,85.1,0,0.222
+test_holo_pb2,holo,v3_holo,s2,276,66.3,85.5,0,0.22
+test_holo_rnp_dimer,holo,v3_holo,s0,901,54.3,74.8,0,0.223
+test_holo_rnp_dimer,holo,v3_holo,s1,901,53.5,73.5,0,0.22
+test_holo_rnp_dimer,holo,v3_holo,s2,901,54.2,73.9,0,0.226
