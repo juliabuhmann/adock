@@ -80,6 +80,8 @@ enable 9 more tests (Vina parity, ligand checks):
 - `box.json` holds `{"center": [x, y, z], "size": [sx, sy, sz]}`. Record boxes produced by `prepare_records.py` hold
   several boxes; choose one with `--box_key`.
 - The ligand SDF is the input structure (with hydrogens). Up to 9 poses are written, and the top affinity is printed.
+- Example input: the 1STP fixture from "Tests" above (`/tmp/adock/smoke_test/1stp/{receptor.pdb,ligand_input.sdf,box.json}`;
+  crystal pose in `ligand_xtal.sdf`).
 - Other presets in `config/adock.json` are `v2_default`, `v2_fast` and `v2_accurate`.
 - Not every preset in that file works in this release. The presets from negative arms (`v2_rerank`, `v2_consensus*`)
   and `--af-mode` values other than `none` need modules that are not included here (see "Not included").
@@ -87,6 +89,12 @@ enable 9 more tests (Vina parity, ligand checks):
 **Batch docking** of a prepared record set (writes a per-complex CSV with RMSD and success):
 
     python scripts/run_adock.py --set val_astex --mode v2_fitted --seed 0 --csv_dir out/
+
+`val_astex` records come from `prepare_records.py` (data env and a full wwPDB mirror). To try the batch runner
+without those, use the Astex dev records from "Tests" (not the locked val split, so the split filter is switched off):
+
+    python scripts/run_adock.py --set astex_dev --receptor receptor_holo.pdb --box_key pocket --no_split_filter \
+        --mode v2_fitted --seed 0 --csv_dir out/
 
 **Template-first AF hybrid (C5).** First build the date-safe template DB once from a local wwPDB mirror. This needs
 MMseqs2 (`scripts/install_mmseqs.sh`) and SIFTS (`scripts/data_fetch_sifts.sh`); `afhybrid_setup.sh` runs both if they
