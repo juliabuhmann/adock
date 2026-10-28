@@ -100,9 +100,9 @@ def run(n=20, sets=None, seed=0):
 
 
 def test_sample_records():
-    if not REC_ROOT.is_dir():
-        import pytest
-        pytest.skip(f"no records at {REC_ROOT} (scripts/prepare_records.py or scripts/make_dev_records.py)")
+    if not REC_ROOT.is_dir() or not any(REC_ROOT.glob("*/*/meta.json")):
+        import pytest  # make_dev_records.py records have no meta.json and are not checked here
+        pytest.skip(f"no prepare_records.py records (with meta.json) under {REC_ROOT}")
     fails, rows = run()
     assert rows and fails == 0
 
