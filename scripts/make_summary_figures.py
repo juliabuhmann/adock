@@ -3,11 +3,11 @@
 Usage: python scripts/make_summary_figures.py [--out docs/summary]
 Writes PNG (dpi 150):
   fig_speed_accuracy.png  PoseBusters V2 holo top-1 success (seed 0, n=285) vs median s/complex (C2 timing pass, n=50)
-  fig_af.png              (a) success on AlphaFold receptors, RnP post-2023 AFDB v4 (n=178, seed 0)
-                          (b) the same methods by similarity of the test complex to earlier PDB complexes (all 222)
+  fig_af_gap.png          AlphaFold-gap diagnosis on validation data: attempted fixes and oracles, from
+                          docs/summary/af_gap_arms.csv (transcribed from docs/REPORT.md §5 and the cited reports)
   graphical_abstract.png  pipeline + the three numbers that summarise the work (+ docked_example.png if present)
   social_preview.png      1280x640 px card for GitHub Settings -> Social preview
-All numbers are read from CSVs in predictions/; nothing is typed in except labels and layout.
+Test-set numbers are read from CSVs in predictions/; validation-arm numbers from docs/summary/af_gap_arms.csv.
 v3 (post-freeze, C7) was not part of the timing pass; it is drawn at V3_COST x the v2_fitted time, the cost
 ratio measured on val (docs/reports/v3_explore.md), and marked as estimated.
 """
@@ -84,16 +84,8 @@ def fig_speed_accuracy(out):
     plt.close(fig)
 
 
-AF_METHODS = [  # method key in c9/mcnemar.csv, label, colour
-    ("adock_v2_fitted_af", "ADock docking", ADOCK),
-    ("gnina_af", "GNINA", DL),
-    ("hybrid_T3", "Template-first,\nstrict (T3)", ADOCK),
-    ("hybrid_T1", "Template-first,\nlenient (T1)", ADOCK),
-    ("c9_refined", "Co-folding +\nrefinement", "#7570b3"),
-]
-
-
 RNP = "test_af_rnp_post2023"
+ARMS = ROOT / "docs/summary/af_gap_arms.csv"  # transcribed from REPORT §5 + agent reports, sources per row
 
 
 def holo_vs_af(method):
@@ -103,42 +95,42 @@ def holo_vs_af(method):
     return {r.rtype: 100 * r.success for r in s.itertuples()}
 
 
-def af_rates():
-    m = pd.read_csv(PRED / "c9/mcnemar.csv")
-    m = m[m.subset == "v4"]
-    r = {"c9_refined": m.success_a.iloc[0]}
-    r.update(dict(zip(m.comparator, m.success_b)))
-    return r, int(m.n.iloc[0])
-
-
-def fig_af(out):
-    r, n = af_rates()
-    strata = pd.read_csv(PRED / "c9/similarity_strata.csv")
-    strata = strata[strata.subset == "all"]
-    fig, (a, b) = plt.subplots(1, 2, figsize=(7.4, 3.0), gridspec_kw={"width_ratios": [1, 1.15]})
-    ys = [r[k] for k, _, _ in AF_METHODS]
-    a.barh(range(len(ys)), ys, color=[c for _, _, c in AF_METHODS])
-    for i, (k, lab, _) in enumerate(AF_METHODS):
-        a.text(ys[i] + 1, i, f"{ys[i]:.1f}", va="center", fontsize=7)
-    a.set_yticks(range(len(ys)), [lab for _, lab, _ in AF_METHODS], fontsize=7)
-    a.set_xlim(0, 80)
-    a.set_xlabel("top-1 success (%)")
-    a.set_title(f"(a) AlphaFold receptors, post-2023 (n={n})", fontsize=8.5)
-    a.spines[["top", "right"]].set_visible(False)
-    lab = [s.replace("[", "").replace(")", "").replace("100.01", "100").replace(".0", "").replace(", ", "–") for s in strata.sim_bin]
-    for key, name, col, mk in [("c9_refined", "Co-folding + refinement", "#7570b3", "o"),
-                               ("hybrid_T1", "Template-first T1", ADOCK, "s"),
-                               ("gnina_af", "GNINA", DL, "^"),
-                               ("adock_v2_fitted_af", "ADock docking", OTHER, "v")]:
-        b.plot(range(len(lab)), strata[key], marker=mk, color=col, label=name, lw=1.2, ms=4)
-    b.set_xticks(range(len(lab)), [f"{l}\n(n={k})" for l, k in zip(lab, strata.n)], fontsize=6)
-    b.set_xlabel("similarity to earlier PDB complexes (Runs N' Poses score)", fontsize=7.5)
-    b.set_ylabel("top-1 success (%)", fontsize=7.5)
-    b.set_title("(b) success depends on having seen similar complexes", fontsize=8.5)
-    b.legend(fontsize=6.5, frameon=False)
-    b.spines[["top", "right"]].set_visible(False)
-    fig.tight_layout()
-    fig.savefig(out / "fig_af.png", dpi=150)
+def fig_af_gap(out):
+    arms = pd.read_csv(ARMS, comment="#")
+    gap = float(arms[arms.panel == "reference"].delta.iloc[0])
+    fig, axes = plt.subplots(1, 2, figsize=(9.0, 4.4), gridspec_kw={"width_ratios": [1.15, 1]})
+    for ax, panel, title, col in [(axes[0], "fix", "(a) Attempted fixes", ADOCK),
+                                  (axes[1], "oracle", "(b) Oracles (true pocket parts inserted)", DL)]:
+        d = arms[arms.panel == panel].reset_index(drop=True)
+        if panel == "fix":
+            d = d.iloc[::-1].reset_index(drop=True)
+        else:
+            d = d.sort_values("delta").reset_index(drop=True)
+        for i, r in d.iterrows():
+            ligand = "query ligand" in r.label
+            c = "#7570b3" if ligand else col
+            if r.interval == "ci95":
+                ax.plot([r.lo, r.hi], [i, i], color=c, lw=1.4)
+                ax.plot(r.delta, i, "o", color=c, ms=4.5)
+            elif r.interval == "range":
+                ax.plot([r.lo, r.hi], [i, i], color=c, lw=4, alpha=0.45, solid_capstyle="butt")
+                ax.plot(r.delta, i, "o", mfc="white", mec=c, ms=4.5)
+            else:
+                ax.plot(r.delta, i, "o", mfc="white", mec=c, ms=4.5)
+        ax.set_yticks(range(len(d)), d.label, fontsize=8)
+        ax.axvline(0, color="#999", lw=0.8)
+        ax.axvline(gap, color="#333", lw=1, ls="--")
+        ax.text(gap + 0.6, -0.5, f"full gap +{gap:.1f}", fontsize=6.3, ha="left", va="bottom", rotation=90)
+        ax.set_xlim(-16, 24)
+        ax.set_ylim(-0.7, len(d) + 0.6)
+        ax.set_xlabel("Δ top-1 success vs plain AlphaFold (points)", fontsize=8)
+        ax.tick_params(axis="x", labelsize=8)
+        ax.set_title(title, fontsize=9.5, loc="left")
+        ax.spines[["top", "right"]].set_visible(False)
+    fig.text(0.01, 0.01, "Validation data only. Filled dot + line: 95 % CI. Shaded bar: range of reported values (no CI). "
+             "Open dot: point value. Purple: uses the query ligand and a deep-learning model.", fontsize=7)
+    fig.tight_layout(rect=(0, 0.035, 1, 1))
+    fig.savefig(out / "fig_af_gap.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -156,48 +148,43 @@ def arrow(ax, x0, y0, x1, y1, label=None):
 def graphical_abstract(out):
     succ = success_pb2()
     t = pd.read_csv(PRED / "timing.csv").groupby("tool").wall_s.median()
-    r, n = af_rates()
     ad, gn = holo_vs_af("adock_v2_fitted"), holo_vs_af("gnina")
+    arms = pd.read_csv(ARMS, comment="#")
+    n_fix = int((arms.panel == "fix").sum())
+    orc = arms[(arms.panel == "oracle")].set_index("label").delta
     fig = plt.figure(figsize=(8, 4.5))
     ax = fig.add_axes([0, 0, 1, 1])
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
-    ax.text(0.03, 0.93, "ADock: fast physics docking, and what it takes to dock into AlphaFold models",
-            fontsize=12, weight="bold")
-    # pipeline
+    ax.text(0.03, 0.93, "ADock: fast physics docking, and an AlphaFold gap that physics cannot close",
+            fontsize=11.5, weight="bold")
     box(ax, 0.03, 0.60, 0.15, 0.20, "Protein structure\n+ ligand\n+ pocket", "#eeeeee")
-    box(ax, 0.25, 0.69, 0.30, 0.11, "Earlier PDB complex with a similar\nprotein and ligand? (dated before query)", "#fde0c5", fs=7.2)
-    box(ax, 0.25, 0.53, 0.30, 0.11, "GPU search (Monte Carlo + BFGS)\nscored by 18-weight physics function", "#fde0c5", fs=7.2)
-    box(ax, 0.63, 0.60, 0.13, 0.20, "Ligand pose\n(top-1)", "#eeeeee")
-    arrow(ax, 0.18, 0.72, 0.25, 0.745)
-    arrow(ax, 0.18, 0.68, 0.25, 0.585)
-    arrow(ax, 0.55, 0.745, 0.63, 0.72, "")
-    arrow(ax, 0.55, 0.585, 0.63, 0.66, "")
-    ax.text(0.575, 0.80, "yes: copy its pose", fontsize=6.5, color="#333")
-    ax.text(0.575, 0.535, "no: dock", fontsize=6.5, color="#333")
+    box(ax, 0.23, 0.60, 0.22, 0.20, "GPU search\nMonte Carlo + BFGS\n(Vina algorithm,\none GPU warp per chain)", "#fde0c5", fs=7.2)
+    box(ax, 0.50, 0.60, 0.17, 0.20, "Fitted physics score\n18 interpretable\nweights", "#fde0c5", fs=7.2)
+    box(ax, 0.72, 0.60, 0.07, 0.20, "Pose", "#eeeeee")
+    arrow(ax, 0.18, 0.70, 0.23, 0.70); arrow(ax, 0.45, 0.70, 0.50, 0.70); arrow(ax, 0.67, 0.70, 0.72, 0.70)
     dock_png = out / "docked_example.png"  # from scripts/render_docked_example.py; skipped if absent
     if dock_png.exists():
         img = plt.imread(dock_png)
-        h0 = int(img.shape[0] * 0.11)  # drop the render's own header band
-        iax = fig.add_axes([0.775, 0.47, 0.215, 0.40])
+        h0 = int(img.shape[0] * 0.11)
+        iax = fig.add_axes([0.80, 0.53, 0.19, 0.34])
         iax.imshow(img[h0:, 150:-150]); iax.axis("off")
-        ax.text(0.882, 0.455, "docked (orange) vs crystal (cyan)", fontsize=6.3, ha="center", color="#333")
-    # three findings
-    y0, h = 0.06, 0.38
+        ax.text(0.895, 0.515, "docked (orange) vs crystal (cyan)", fontsize=6, ha="center", color="#333")
+    y0, h = 0.06, 0.40
     items = [
         ("Fast", f"{t['adock_single_v2_default']:.2f} s per complex\nvs {t['unidock']:.1f} s Uni-Dock,\n{t['gnina']:.1f} s GNINA",
-         f"Holo accuracy {succ['adock_v2_fitted']:.0f} %: level with\nVina-family tools, below\nGNINA-CNN ({succ['gnina']:.0f} %)"),
+         f"Experimental receptors: {succ['adock_v2_fitted']:.0f} %,\nlevel with Vina-family tools,\nbelow GNINA-CNN ({succ['gnina']:.0f} %)"),
         ("AlphaFold gap", f"Same 222 complexes,\nexperimental → AlphaFold receptor:\nADock {ad['holo']:.0f} % → {ad['af']:.0f} %\nGNINA {gn['holo']:.0f} % → {gn['af']:.0f} %",
-         "Pocket errors under 1 Å defeat every\nphysics score tried (Vina, fitted,\nforce field, ensembles, re-ranking)"),
-        ("Information, not physics", f"Template copy {r['hybrid_T1']:.0f} % (lenient)\n→ {r['hybrid_T3']:.0f} % (strict), GNINA {r['gnina_af']:.0f} %\nCo-folding {r['c9_refined']:.0f} % (post hoc)",
-         "Gains shrink as similar earlier\ncomplexes are excluded: success\ntracks what was seen before"),
+         "Test set, post-2023 complexes"),
+        ("Nothing tried closes it", f"{n_fix} attempted fixes, none closes\nthe gap (best: co-folded receptor\nwith the ligand, +8). True pocket\n(oracle): +{orc['Experimental backbone + side chains']:.0f}; true side chains: ns",
+         "Cause: sub-ångström errors in backbone\nand side chains together.\nValidation data, wide CIs."),
     ]
-    for i, (head, big, small) in enumerate(items):
+    for i, (head_, big, small) in enumerate(items):
         x = 0.03 + i * 0.32
         box(ax, x, y0, 0.29, h, "", "#f6f6f6")
-        ax.text(x + 0.015, y0 + h - 0.06, head, fontsize=10, weight="bold", color=ADOCK)
-        ax.text(x + 0.015, y0 + h - 0.11, big, fontsize=8.5, va="top")
+        ax.text(x + 0.015, y0 + h - 0.06, head_, fontsize=10, weight="bold", color=ADOCK)
+        ax.text(x + 0.015, y0 + h - 0.11, big, fontsize=8.3, va="top")
         ax.text(x + 0.015, y0 + 0.03, small, fontsize=7, va="bottom", color="#444")
-    ax.text(0.03, 0.015, f"Test sets: PoseBusters V2 (n=285); Runs N' Poses post-2023 AFDB v4 (n={n}). Top-1 success = RMSD ≤ 2 Å, pocket given, seed 0.",
+    ax.text(0.03, 0.015, "Test sets: PoseBusters V2 (n=285); Runs N' Poses post-2023 (n=222). Top-1 success = RMSD ≤ 2 Å, pocket given, seed 0.",
             fontsize=6.3, color="#555")
     fig.savefig(out / "graphical_abstract.png", dpi=150)
     plt.close(fig)
@@ -207,14 +194,14 @@ def social_preview(out):
     """1280x640 px image for GitHub Settings -> Social preview."""
     succ = success_pb2()
     t = pd.read_csv(PRED / "timing.csv").groupby("tool").wall_s.median()
-    r, n = af_rates()
+    ad = holo_vs_af("adock_v2_fitted")
     fig = plt.figure(figsize=(12.8, 6.4), dpi=100)
     ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
     ax.text(0.05, 0.84, "ADock", fontsize=48, weight="bold", color=ADOCK)
-    ax.text(0.05, 0.76, "GPU protein–ligand docking with an AlphaFold mode", fontsize=19)
+    ax.text(0.05, 0.76, "Fast GPU protein–ligand docking", fontsize=20)
     lines = [f"{t['adock_single_v2_default']:.2f} s per complex  (GNINA {t['gnina']:.0f} s, Uni-Dock {t['unidock']:.1f} s)",
              f"{succ['adock_v2_fitted']:.0f} % PoseBusters V2 success, level with Vina-family tools",
-             "AlphaFold receptors: physics fails; earlier complexes help",
+             f"AlphaFold receptors: {ad['holo']:.0f} % → {ad['af']:.0f} %; none of 13 fixes closed the gap",
              "An AI-agent research project, pre-registered and held-out tested"]
     for i, l in enumerate(lines):
         ax.text(0.05, 0.58 - i * 0.1, "•  " + l, fontsize=14.5, color="#222")
@@ -222,7 +209,7 @@ def social_preview(out):
     if dock_png.exists():
         img = plt.imread(dock_png)
         h0 = int(img.shape[0] * 0.11)
-        iax = fig.add_axes([0.60, 0.06, 0.39, 0.88])
+        iax = fig.add_axes([0.62, 0.06, 0.37, 0.88])
         iax.imshow(img[h0:, 250:-150]); iax.axis("off")
     fig.savefig(out / "social_preview.png", dpi=100)
     plt.close(fig)
@@ -234,7 +221,7 @@ def main():
     out = Path(ap.parse_args().out)
     out.mkdir(parents=True, exist_ok=True)
     fig_speed_accuracy(out)
-    fig_af(out)
+    fig_af_gap(out)
     graphical_abstract(out)
     social_preview(out)
     print("wrote", *sorted(p.name for p in out.glob("*.png")))

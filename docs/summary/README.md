@@ -3,9 +3,10 @@
 | file | content |
 |---|---|
 | `briefing.pdf` (`briefing.md`) | 2-page briefing: what ADock is, how it was tested, main findings, limitations |
-| `technical_report.pdf` (`technical_report.md`) | 4-page technical report: method, results, insights, turning points, limitations |
+| `technical_report.pdf` (`technical_report.md`) | 4-page technical report: the engine, its results, the AlphaFold-gap diagnosis, insights, turning points, limitations |
 | `graphical_abstract.png` | one-figure summary |
-| `fig_speed_accuracy.png`, `fig_af.png` | figures used in the two documents |
+| `fig_speed_accuracy.png`, `fig_af_gap.png` | figures used in the two documents |
+| `af_gap_arms.csv` | validation results of the AlphaFold-gap fixes and oracles behind `fig_af_gap.png`, transcribed by hand from `docs/REPORT.md` §5 and the agent reports cited per row (not recomputed) |
 | `docked_example.png` | ADock pose vs crystal ligand (README figure) |
 | `social_preview.png` | 1280×640 px card; upload it under GitHub repository **Settings → General → Social preview** (it cannot be set from a file in the repo) |
 
@@ -15,8 +16,8 @@ Rebuild (needs matplotlib and pandas; PyMOL open-source and RDKit for the render
 
     python scripts/render_docked_example.py --records <dir>/test_holo_pb2 --poses <dir>/test_holo_pb2__holo__v3_holo__s0   # records from scripts/prepare_records.py; poses from predictions/poses/c7_v3_holo_sdf.tar.gz
     python scripts/make_summary_figures.py
-    python scripts/render_summary_pdf.py docs/summary/technical_report.md --font 9.4 --img-width 15.5
-    python scripts/render_summary_pdf.py docs/summary/briefing.md --font 9.8 --img-width 16
+    python scripts/render_summary_pdf.py docs/summary/technical_report.md --font 9.2
+    python scripts/render_summary_pdf.py docs/summary/briefing.md --font 9.8
 
 In the render script RDKit could compute an RMSD for only 168 of the 277 pose files; the others were skipped. This
 affects only which example is picked. The evaluation RMSDs come from `adock.rmsd`.

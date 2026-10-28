@@ -17,15 +17,22 @@ not by eye: it is the median-RMSD success among drug-sized ligands
 [`docs/summary/`](docs/summary/).
 
 ADock is a protein–ligand docking engine for GPU (CUDA through cupy NVRTC) and multi-core CPU. It uses Vina-family
-scoring, plus an optional fitted scoring function with 18 interpretable weights. It also has a template-first hybrid
-mode for AlphaFold (AF) receptors. In the pre-registered test evaluation (seed 0, pocket given; [`docs/REPORT.md`](docs/REPORT.md) §1, §6):
+scoring, plus an optional fitted scoring function with 18 interpretable weights. We used it to study why physics-based
+docking fails on AlphaFold (AF) receptors. In the pre-registered test evaluation (seed 0, pocket given;
+[`docs/REPORT.md`](docs/REPORT.md) §1, §6):
 
 - **Speed.** Per complex, ADock is **46–54× faster than GNINA** and **12–14× faster than Uni-Dock** (median, warm single complex, shared node).
 - **PoseBusters V2 (holo, n=285).** v2_fitted reaches **58.6 %** success. gnina without CNN reaches 59.3 % and GNINA with CNN rescoring 67.0 %.
-- **Pre-registered claims.** None of the confirmatory claims (C1–C3) passed after Holm correction.
-- **AF receptors (Runs N' Poses post-2023, AFDB v4, n=178).** ADock reaches **11.2 %** against GNINA's **18.0 %**.
-  The exploratory template-first hybrid reaches **23.6 %** at tier T1 against 18.0 % (p 0.077). With stricter
-  template tiers it does not beat GNINA (T3 11.8 %).
+- **AF receptors.** On the same 222 post-2023 Runs N' Poses complexes, ADock falls from 50.5 % (experimental
+  receptor) to 10.8 % (AF model) and GNINA from 61.3 % to 16.7 %. None of 13 fixes tried on validation data closes
+  this gap. Inserting the true pocket into the AF model (an oracle) recovers +12 points, and true side chains alone
+  are not significant: the gap lies in sub-Å backbone and side-chain geometry together
+  ([`docs/summary/fig_af_gap.png`](docs/summary/fig_af_gap.png); validation data, wide CIs).
+- **Pre-registered claims.** None of the confirmatory claims (C1–C3) passed after Holm correction. C1 (ADock vs GNINA
+  on AF receptors, AFDB v4, n=178): 11.2 vs 18.0 %.
+
+An exploratory template-first mode (copying the ligand pose from an earlier, similar PDB complex) is also included;
+it helps only where such complexes exist (`docs/REPORT.md` §3.4, §6.3).
 
 Success means a top-1 symmetry-corrected heavy-atom RMSD ≤ 2 Å with the pocket given. Limitations, negative results
 and deviations from the pre-registration are in `docs/REPORT.md` §5, §7 and `docs/RESEARCH_TREE.md`.

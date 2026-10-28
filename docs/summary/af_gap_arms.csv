@@ -1,0 +1,24 @@
+# Transcribed by hand from docs/REPORT.md section 5 and the cited agent reports (validation data only; not recomputed).
+# delta = change in top-1 success (percentage points) vs ADock on the plain AlphaFold receptor, unless noted.
+# interval: ci95 = 95 % paired bootstrap CI; range = spread of reported values (no CI); none = point value only.
+# Reference gap: ADock v2_default holo 34.9 % vs AF 16.3 % on val_af_post2023 (n=125, 3 seeds; docs/reports/afmode.md).
+panel,label,delta,lo,hi,interval,data,source
+fix,Softer pocket (atom radii -0.15 Å),2.4,-1.9,6.9,ci95,post-2023 AF val n=125,docs/reports/afmode.md
+fix,Softer side chains (-0.2 Å),2.7,-2.4,7.7,ci95,post-2023 AF val n=125,docs/reports/afmode.md
+fix,Ligand-aware side-chain repacking,1.6,-1.3,4.8,ci95,post-2023 AF val n=125,docs/reports/afmode.md
+fix,Rotamer ensembles (4 per residue),0.5,-1.6,2.9,ci95,post-2023 AF val n=125,docs/reports/afmode.md
+fix,Metal-ion placement,0.0,,,none,selection half,docs/reports/afmode.md
+fix,AF-tolerant refitted score,0.0,,,none,confirmation half (11.5 % = stock),docs/reports/scoring_af.md
+fix,Consensus pose selection,0.0,,,none,AF val,docs/reports/consensus.md
+fix,Force-field induced fit (Amber14/OBC2),2.0,1.6,2.4,range,vs soft AF; not significant,docs/reports/induced_fit.md
+fix,Re-ranker without box-centre feature,-1.5,-3.0,0.0,range,confirmation half,docs/reports/rerank.md
+fix,Homolog pocket transfer (one template),-2.8,-9.3,3.3,ci95,confirmation half (post-2023 + PLINDER AF),docs/reports/pocket_transfer.md
+fix,BioEmu2 conformational ensembles,-10.5,-14.0,-7.0,range,selection half,docs/reports/bioemu_ensemble.md
+fix,Boltz-2 receptor (MSA; no ligand),-3.3,-9.6,2.9,ci95,post-2023 AF val n=120,docs/reports/cofold_msa.md
+fix,Boltz-2 receptor (MSA + query ligand + pocket),8.3,1.7,15.0,ci95,post-2023 AF val n=120; confirmation half +6.0 (ns),docs/reports/cofold_msa.md
+oracle,Experimental side-chain angles (χ),6.1,-0.9,13.1,ci95,confirmation half (post-2023 + PLINDER AF),docs/reports/pocket_transfer.md
+oracle,Experimental side chains on AF backbone,3.7,-2.8,10.3,ci95,confirmation half,docs/reports/pocket_transfer.md
+oracle,Experimental backbone only,7.0,-0.5,14.5,ci95,confirmation half,docs/reports/pocket_transfer.md
+oracle,Experimental backbone + side chains,12.2,4.2,20.6,ci95,confirmation half (selection half +22.0),docs/reports/pocket_transfer.md
+oracle,Crystal metals and cofactors added,1.5,1.0,2.0,range,AF val,docs/reports/afmode.md
+reference,Full gap (experimental vs AF receptor),18.6,,,none,post-2023 AF val n=125 3 seeds: 34.9 vs 16.3 %,docs/reports/afmode.md

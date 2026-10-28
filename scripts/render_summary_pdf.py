@@ -1,6 +1,7 @@
 """Render a Markdown file from docs/summary/ to PDF (A4), with its images, and report the page count.
 
 Usage: python scripts/render_summary_pdf.py docs/summary/technical_report.md [--font 8.6] [--img-width 15]
+In the Markdown, ![caption|12](fig.png) sets that image's width to 12 cm.
 Needs `markdown`, `xhtml2pdf`, `matplotlib` (bundled DejaVu fonts for Unicode symbols) and `pymupdf` (page count).
 Output: same path with .pdf. Font size and image width are layout knobs used to fit the target page count.
 """
@@ -74,8 +75,10 @@ def main():
     src = Path(a.md).resolve()
     register_fonts()
     html = markdown.markdown(normalise_lists(src.read_text()), extensions=["tables"])
-    html = re.sub(r'<img alt="([^"]*)" src="([^"]+)"',
-                  lambda m: f'<img alt="{m.group(1)}" src="{src.parent / m.group(2)}" width="{a.img_width}cm"', html)
+    def img(m):  # alt text "caption|12" sets this image's width in cm; otherwise --img-width
+        alt, _, w = m.group(1).partition("|")
+        return f'<img alt="{alt}" src="{src.parent / m.group(2)}" style="width: {float(w or a.img_width)}cm"'
+    html = re.sub(r'<img alt="([^"]*)" src="([^"]+)"', img, html)
     doc = f"<html><head><meta charset='utf-8'><style>{css(a.font)}</style></head><body>{html}</body></html>"
     out = src.with_suffix(".pdf")
     with open(out, "wb") as fh:
