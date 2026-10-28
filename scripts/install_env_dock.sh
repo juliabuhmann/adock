@@ -12,7 +12,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # set ENV_STORE (e.g. /tmp/adock/envs); conda_envs/dock is then a symlink to it.
 ENV_STORE="${ENV_STORE:-${ROOT}/conda_envs}"
 PREFIX="${ENV_STORE}/dock"
-if [[ "$ENV_STORE" != "${ROOT}/conda_envs" ]]; then mkdir -p "$ENV_STORE"; ln -sfn "$PREFIX" "${ROOT}/conda_envs/dock"; fi
+if [[ "$ENV_STORE" != "${ROOT}/conda_envs" ]]; then mkdir -p "$ENV_STORE" "${ROOT}/conda_envs"; ln -sfn "$PREFIX" "${ROOT}/conda_envs/dock"; fi
 CUDA_VERSION="12.9"          # conda-forge cuda-version pin (>=12.8 needed for sm_120)
 TORCH_INDEX="https://download.pytorch.org/whl/cu128"   # PyTorch CUDA 12.8 wheels (sm_120 support)
 TORCH_VERSION="2.8.0"
