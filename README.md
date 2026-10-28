@@ -3,8 +3,18 @@
 > **Note: this is the output of an AI-agent experiment.** The repository comes from an experiment that asked whether AI
 > agents can run a bioinformatics research project on their own within 24 hours. A PI agent (Claude Opus 5.5) directed
 > Opus 5.5 and Sonnet 5.5 sub-agents in Claude Code. The original task prompt is in [`PROMPT.md`](PROMPT.md) (verbatim).
-> **Humans did not write the code.** Independent agents checked the results; human experts did not. The manuscript is
-> in [`paper/`](paper/).
+> **Humans did not write the code.** Independent agents checked the results; human experts did not.
+
+![ADock pose vs crystal ligand](docs/summary/docked_example.png)
+
+*A typical ADock result: the predicted pose (orange) sits on the crystal ligand (wide cyan) in the experimental
+receptor of PDB 7K0V from the PoseBusters V2 test set (top-1 RMSD 0.62 Å). The example was chosen by a fixed rule,
+not by eye: it is the median-RMSD success among drug-sized ligands
+(`scripts/render_docked_example.py`, v3 preset, seed 0). On AlphaFold receptors such results are much rarer (see below).*
+
+**Short reads:** [2-page briefing](docs/summary/briefing.pdf) · [4-page technical report](docs/summary/technical_report.pdf) ·
+[graphical abstract](docs/summary/graphical_abstract.png). Markdown sources and figure scripts are in
+[`docs/summary/`](docs/summary/).
 
 ADock is a protein–ligand docking engine for GPU (CUDA through cupy NVRTC) and multi-core CPU. It uses Vina-family
 scoring, plus an optional fitted scoring function with 18 interpretable weights. It also has a template-first hybrid
@@ -83,7 +93,7 @@ Records are read from `--records` (default `/tmp/adock/data/records/<set>/<id>/`
 | `results/splits/` | locked non-test splits (fit/val) as written by `scripts/make_splits.py` (test splits: `predictions/splits/`) |
 | `docs/` | final report, research tree, design/pre-registration, literature, lessons, agent reports and reviews ([`docs/README.md`](docs/README.md)) |
 | `DATA.md` | source, version, checksum and licence of every dataset, weight file and baseline binary |
-| `paper/` | manuscript for PLOS Computational Biology (LaTeX), S1 Text (methods that did not work), figure script, preview PDFs ([`paper/README.md`](paper/README.md)) |
+| `docs/summary/` | 2-page briefing, 4-page technical report, graphical abstract, figures and a GitHub social-preview image; rebuilt by `scripts/make_summary_figures.py`, `scripts/render_docked_example.py` and `scripts/render_summary_pdf.py` |
 
 Scripts:
 - Docking: `run_adock.py` (batch), `run_afhybrid.py` (hybrid).
