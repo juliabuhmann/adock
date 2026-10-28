@@ -1,0 +1,14 @@
+# Read by scripts/data_fetch_zenodo.py. Columns (tab-separated): dataset, zenodo_record, file_key, extract(yes/no), note
+# Reconstructed for the release from DATA.md (record IDs, file names); file keys and md5s checked against the
+# Zenodo REST API on 2026-10-28. The fetch script verifies each md5 against Zenodo at download time.
+posebusters_paper	8278563	posebusters_paper_data.zip	yes	PoseBusters V1 + Astex Diverse (val_astex, make_dev_records.py)
+posebusters_paper	8278563	posebusters_paper_results.csv	no	PoseBusters paper per-method results
+posebench	19138652	posebusters_benchmark_set.tar.gz	no	PoseBench v1.5.0 PB set (PB V2 IDs, ESMFold receptors); kept packed
+posebench	19138652	astex_diverse_set.tar.gz	no	PoseBench v1.5.0 Astex set; kept packed
+posebench	19138652	dockgen_set.tar.gz	no	PoseBench v1.5.0 DockGen set; kept packed
+dockgen	10656052	DockGen.tar	yes	DockGen test/val
+runsnposes	18366081	annotations.csv	no	Runs N' Poses annotations
+runsnposes	18366081	inputs.json	no	Runs N' Poses inputs
+runsnposes	18366081	ground_truth.tar.gz	no	Runs N' Poses ground truth; kept packed
+runsnposes	18366081	all_similarity_scores.parquet	no	Runs N' Poses similarity scores
+runsnposes	18366081	posebusters_results.tar.gz	no	Runs N' Poses PoseBusters results
