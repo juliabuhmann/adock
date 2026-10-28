@@ -58,6 +58,17 @@ torch 2.8.0+cu128. Development used one RTX PRO 6000 Blackwell (driver 580).
   `ADOCK_AFDB_DIR`, `ADOCK_VINAGPU_DIR`. Config strings such as `"${ADOCK_PDB_MIRROR}"` are expanded at load time.
 - `pip install -e .` installs only the `adock` package and an `adock-dock` entry point. It deliberately installs no
   dependencies, so the CUDA builds from the env are not replaced.
+- `check_env_dock.py` reports `[FAIL] numba CUDA (optional)` with this env; `adock` does not use numba CUDA.
+
+**Tests.** Most tests need the 1STP fixture, which is built from a wwPDB mirror. Instead of a full mirror,
+`fetch_test_mirror.py` downloads the three wwPDB files the tests use. The Astex dev records (54 MB Zenodo download)
+enable 9 more tests (Vina parity, ligand checks):
+
+    export ADOCK_PDB_MIRROR=/tmp/adock/pdb_mirror
+    python scripts/fetch_test_mirror.py
+    python scripts/smoke_test_baselines.py --prepare-only     # writes /tmp/adock/smoke_test/1stp/
+    python scripts/data_fetch_zenodo.py --datasets posebusters_paper && python scripts/make_dev_records.py   # optional
+    pytest -q
 
 ## Quickstart
 
