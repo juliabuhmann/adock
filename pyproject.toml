@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "GPU/CPU protein-ligand docking engine with Vina-family and fitted scoring, and a template-first AlphaFold hybrid (research code)"
 readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "MIT" }
 # Runtime dependencies (torch with CUDA, cupy, rdkit, gemmi, openmm, ...) come from the conda env in envs/dock.yml
 # (scripts/install_env_dock.sh); they are not pinned here so that `pip install -e .` does not replace the CUDA builds.
 dependencies = []

@@ -2,7 +2,7 @@
 
 > **Note: this is the output of an AI-agent experiment.** The repository comes from an experiment that asked whether AI
 > agents can run a bioinformatics research project on their own within 24 hours. A PI agent (Claude Opus 5.5) directed
-> Opus 5.5 and Sonnet 5.5 sub-agents in Claude Code. The original task prompt is in [`PROMPT.md`](PROMPT.md) (verbatim).
+> Opus 5.5 and Sonnet 5.5 sub-agents in Claude Code. The original task prompt is in [`PROMPT.md`](PROMPT.md) (verbatim except two local paths, removed).
 > **Humans did not write the code.** Independent agents checked the results; human experts did not.
 
 ![ADock pose vs crystal ligand](docs/summary/docked_example.png)
@@ -166,4 +166,6 @@ reference these files.
 
 ## License
 
-License: to be chosen by the authors before publication (code reimplements AutoDock Vina scoring, Apache-2.0).
+MIT (see [`LICENSE`](LICENSE)). ADock reimplements the AutoDock Vina and Vinardo scoring functions and search
+scheme; their published parameter values are used with attribution (Vina: Trott & Olson 2010, Eberhardt et al. 2021;
+Vinardo: Quiroga & Villarreal 2016). No Vina source files are included. Datasets keep their own licences (`DATA.md`).
