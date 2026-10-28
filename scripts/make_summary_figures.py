@@ -215,6 +215,75 @@ def social_preview(out):
     plt.close(fig)
 
 
+TERM_LABELS = {  # fitted-score feature -> (group, readable name); names follow src/adock/fit/terms.py
+    "gauss1": ("Vina", "gauss1 (contact)"), "gauss2": ("Vina", "gauss2 (contact)"), "repulsion": ("Vina", "repulsion"),
+    "hydrophobic": ("Vina", "hydrophobic"), "hbond": ("Vina", "H-bond"),
+    "hyd_buried": ("new", "buried hydrophobic"), "hbond_buried": ("new", "buried H-bond"),
+    "hbond_ligdonor": ("new", "ligand-donor H-bond"), "hbond_charged": ("new", "charged H-bond"),
+    "metal_acceptor": ("new", "metal--acceptor"), "ionic": ("new", "ionic"), "polar_apolar": ("new", "polar--apolar"),
+    "gauss1_buried": ("new", "buried contact"),
+    "intra_gauss1": ("intra", "gauss1"), "intra_gauss2": ("intra", "gauss2"), "intra_repulsion": ("intra", "repulsion"),
+    "intra_hydrophobic": ("intra", "hydrophobic"), "intra_hbond": ("intra", "H-bond"),
+}
+
+
+def weights_table(out):
+    """LaTeX rows: fitted weight next to the Vina weight (0 for new terms) from config/*.json."""
+    import json
+    fit = json.load(open(ROOT / "config/adock_fitted.json"))["weights"]
+    vina = json.load(open(ROOT / "config/adock.json"))["scoring"]["vina"]
+    rows = []
+    for k, w in fit.items():
+        grp, name = TERM_LABELS[k]
+        base = vina[k.replace("intra_", "")]["weight"] if grp != "new" else 0.0
+        rows.append(f"{grp} & {name} & ${base:+.4f}$ & ${w:+.4f}$ \\\\")
+    body = "\n".join(rows)
+    (out / "weights_table.tex").write_text(
+        "\\begin{tabular}{@{}llrr@{}}\n\\toprule\ngroup & term & Vina & fitted \\\\\n\\midrule\n" + body + "\n\\bottomrule\n\\end{tabular}\n")
+
+
+def gap_table(out):
+    """LaTeX rows: seed-0 success (%) on RnP post-2023 (holo / AFDB) and PoseBusters AFDB / ESMFold receptors."""
+    s = pd.read_csv(PRED / "success_summary.csv")
+    s = s[s.seed.astype(str) == "0"]
+    get = lambda st, rt, m: 100 * s[(s.set == st) & (s.rtype == rt) & (s.method == m)].success.iloc[0]
+    rows = []
+    for m, lab in [("adock_v2_default", "ADock default"), ("adock_v2_fitted", "ADock fitted"), ("gnina", "GNINA (CNN)")]:
+        h, a = get(RNP, "holo", m), get(RNP, "af", m)
+        rows.append(f"{lab} & {h:.1f} & {a:.1f} & ${a - h:+.1f}$ & {get('test_af_pb2', 'af', m):.1f} & {get('test_af_pb2', 'esmfold', m):.1f} \\\\")
+    body = "\n".join(rows)
+    (out / "gap_table.tex").write_text(
+        "\\begin{tabular}{@{}lrrrrr@{}}\n\\toprule\n & RnP holo & RnP AF & $\\Delta$ & PB2 AFDB & PB2 ESMF. \\\\\n\\midrule\n"
+        + body + "\n\\bottomrule\n\\end{tabular}\n")
+
+
+HOLO_ROWS = [  # (method in success_summary.csv, tool in timing.csv or None, label)
+    ("adock_v2_default", "adock_single_v2_default", "ADock default"),
+    ("adock_v2_fitted", "adock_single_v2_fitted", "ADock fitted"),
+    ("vina", "vina", "Vina 1.2"), ("smina", "smina", "smina"), ("vinardo", None, "Vinardo"),
+    ("unidock", "unidock", "Uni-Dock (balance)"), ("gnina_nocnn", None, "GNINA, no CNN"), ("gnina", "gnina", "GNINA (CNN)"),
+]
+
+
+def holo_table(out):
+    """LaTeX tabular: PB2 holo success seed 0, mean +- SD over seeds 0-2 where run, median time (timing pass)."""
+    s = pd.read_csv(PRED / "success_summary.csv")
+    s = s[(s.set == PB2) & (s.rtype == "holo")]
+    t = pd.read_csv(PRED / "timing.csv").groupby("tool").wall_s.median()
+    rows = []
+    for m, tool, lab in HOLO_ROWS:
+        r = s[s.method == m]
+        s0 = 100 * r[r.seed.astype(str) == "0"].success.iloc[0]
+        mean = r[r.seed.astype(str) == "mean"]
+        ms = (f"{100 * mean.success.iloc[0]:.1f} $\\pm$ {100 * mean.success_sd.iloc[0]:.1f}"
+              if len(mean) and mean.n_seeds.iloc[0] == 3 else "--")
+        tt = f"{t[tool]:.2f}" if tool else "--"
+        rows.append(f"{lab} & {s0:.1f} & {ms} & {tt} \\\\")
+    (out / "holo_table.tex").write_text(
+        "\\begin{tabular}{@{}lrrr@{}}\n\\toprule\nmethod & seed 0 & seeds 0--2 & time (s) \\\\\n\\midrule\n"
+        + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "docs/summary"))
@@ -224,7 +293,10 @@ def main():
     fig_af_gap(out)
     graphical_abstract(out)
     social_preview(out)
-    print("wrote", *sorted(p.name for p in out.glob("*.png")))
+    weights_table(out)
+    gap_table(out)
+    holo_table(out)
+    print("wrote", *sorted(p.name for p in out.glob("*.png")), "weights_table.tex gap_table.tex holo_table.tex")
 
 
 if __name__ == "__main__":
