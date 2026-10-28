@@ -100,6 +100,9 @@ def run(n=20, sets=None, seed=0):
 
 
 def test_sample_records():
+    if not REC_ROOT.is_dir():
+        import pytest
+        pytest.skip(f"no records at {REC_ROOT} (scripts/prepare_records.py or scripts/make_dev_records.py)")
     fails, rows = run()
     assert rows and fails == 0
 
